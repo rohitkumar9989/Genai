@@ -1,0 +1,12 @@
+langchain
+langchain_community
+arxiv
+bs4
+pymupdf
+unstructured
+libmagic
+langchain-text-splitters
+python-dotenv
+langchain_huggingface
+sentence_transformers
+faiss-cpu
