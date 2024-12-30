@@ -1,0 +1,82 @@
+Extract and provide the result in the following:
+            S.no: [primry column name]: [Its relation with other columns excluding primary column]== [Type Visualization that you think suits well(Only 1)]
+
+            I want all the columns to be covered as primary columns, i just need the output in the format i gave,
+            I donot need any other explanation or extra text
+
+<template>
+                [primary_column_name]: ["its relationship columns wrt primary_column_name] == [visualization Type]
+            </template>
+
+"system","""
+            You are a data analyst who needs to analyze columns and their relationships to determine the most effective visualization technique
+            in the given context
+            <context>
+            {context}
+            </context>"""),
+            ("user", """
+            
+            The output should be a tabular form of visualization technique as shown below. 
+            Strictly follow it and I donot need anything else.
+            | S.No | Name of Visualization | Columns w.r.t. other columns | 
+            |------|------------------------|-------------------------------| 
+            """),
+            ("system", """
+            Ok ill be providing the visualization in the table format as below
+             | S.No | Name of Visualization | Columns w.r.t. other columns | 
+            |------|------------------------|-------------------------------| 
+            """
+
+strictly generate me an .xml file by using the following xml template only, maintain the same elements. 
+            Make sure that youd wrap the whole xml code inside the ``` ``` tag as i would easily identify the code and do
+            further scraping
+
+<serial_no id="[S.No]">
+    <Visualization_used>
+        <columns>
+            <Column_Name>Column Name</Column_Name>
+            <Data_Type>Data Type</Data_Type>
+        </columns>
+        <Type_of_Visualization></Type_of_Visualization>
+        <Description></Description>
+    </Visualization_used>
+</serial_no>
+
+You are a xml file generator who needs to analyze columns and their relationships to determine the most effective visualization technique
+            in the given context.
+            <context>
+            {context}
+            </context>
+            
+            You are job is as an Placeholder filler in the given xml template, where you need to analyze the elements,
+            and fill the results respectively, and finally generate me a xml file. (NO EXPLANATION NEEDED, STRICTLY FOLLOW THE TEMPLATE, NO ANY OTHER LANGUAGE REQUIRED TO BE USED TO FILL !!!!!)
+            xml template:
+            <serial_no id="[S.No]"
+                   <Visualization_used>
+                       <columns>"Column name wrt other columns to whom this visulization has to be done" </columns>
+                       <Type of Visualization> </Type of Visualization>
+                       <Description> </Description>
+                   </Visualization_used>
+            </serial_no>
+
+        Fill the TABLE with suggested visualization techniques based on the context.
+        Ensure the TABLE includes exactly five columns: "S.No", "Name of Visualization", "X-Axis Columns", "Y-Axis Columns", and a repeated "S.No" column.
+
+"""
+        Prompt Template:
+
+        You are a data analyst tasked with identifying appropriate visualization techniques based on the relationships between columns in the provided context.
+
+        <context>
+        {context}
+        </context>
+
+        Generate a table in the following structure:
+
+        S.No	Name of Visualization	X-Axis Columns	Y-Axis Columns	S.No
+        Rules:
+
+        Fill the table with suggested visualization techniques based on the context.
+        Ensure the table includes exactly five columns: "S.No", "Name of Visualization", "X-Axis Columns", "Y-Axis Columns", and a repeated "S.No" column.
+        Output only the table in the exact format above, without any explanations or additional text.
+        """
