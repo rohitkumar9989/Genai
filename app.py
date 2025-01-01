@@ -25,79 +25,123 @@ if file_path:
         class Visualize_data():
             def run(self, data):
                 for i in range(2, len(data) + 2):
-                    sub_dictionary = data.get(i)
-                    xaxis = sub_dictionary.get("X-Axis")
-                    yaxis = sub_dictionary.get("Y-Axis")
-
-                    xaxis_values, yaxis_values = pandas.obtain_data(xaxis, yaxis)
-
-                    viz_type = sub_dictionary.get("Type")
-                    print(viz_type)
-
-                    if viz_type == "Scatter Plot":
-                        if re.search("(.*?)-(.*?)", str(xaxis_values)) or re.search("(.*?)/(.*?)", str(xaxis_values)):
-                            xaxis_values=xaxis_values[:20]
-                            yaxis_values=yaxis_values[:20]
-                        fig, ax = plt.subplots()
-                        sns.scatterplot(x=xaxis_values, y=yaxis_values, color='blue', alpha=0.6, edgecolor='black', ax=ax)
-                        ax.set_title("Scatter Plot")
-                        ax.set_xlabel(xaxis)
-                        ax.set_ylabel(yaxis)
-                        plt.xticks(rotation=90)
-                        st.pyplot(fig)
-
-                    if viz_type == "Bar Chart":
-                        if re.search("(.*?)-(.*?)", str(xaxis_values)) or re.search("(.*?)/(.*?)", str(xaxis_values)):
-                            xaxis_values=xaxis_values[:20]
-                            yaxis_values=yaxis_values[:20]
-                        fig, ax = plt.subplots()
-                        sns.barplot(x=xaxis_values, y=yaxis_values, color='blue', ax=ax)
-                        ax.set_xlabel(xaxis)
-                        ax.set_ylabel(yaxis)
-                        ax.set_title("Bar Chart Example")
-                        plt.xticks(rotation=90)
-                        st.pyplot(fig)
-
-                    if viz_type == "Bubble Chart":
-                        sub_data = pd.DataFrame({
-                            xaxis: xaxis_values,  
-                            yaxis: yaxis_values, 
-                            'size': yaxis_values  
-                        })
-                        fig, ax = plt.subplots()
-                        sns.scatterplot(
-                            data=sub_data,x=xaxis,y=yaxis,size='size',hue=xaxis,alpha=0.6,edgecolor='black',palette="viridis",ax=ax
-                        )
-                        ax.set_title("Bubble Chart")
-                        ax.set_xlabel(xaxis)
-                        ax.set_ylabel(yaxis)
-                        st.pyplot(fig)
-
-                    if viz_type == "Heatmap":
-                        try:
-                            xaxis_values=xaxis_values[0:30]
-                            yaxis_values=yaxis_values[0:30]
-                            heatmap_data = pd.DataFrame({xaxis: xaxis_values, yaxis: yaxis_values})
-                            fig, ax = plt.subplots()
+                    try:
+                        sub_dictionary = data.get(i)
+                        xaxis = sub_dictionary.get("X-Axis")
+                        yaxis = sub_dictionary.get("Y-Axis")
+                        xaxis_values, yaxis_values = pandas.obtain_data(xaxis, yaxis)
+                        viz_type = sub_dictionary.get("Type")
+                        if viz_type == "Scatter Plot":
+                            data_df = pd.DataFrame({xaxis: xaxis_values, yaxis: yaxis_values})
+                            aggregated_data = data_df.groupby(xaxis).sum().reset_index()
+                            xaxis_values = aggregated_data[xaxis]
+                            yaxis_values = aggregated_data[yaxis]
+                            if re.search("(.*?)-(.*?)", str(xaxis_values)) or re.search("(.*?)/(.*?)", str(xaxis_values)):
+                                xaxis_values=xaxis_values[:20]
+                                yaxis_values=yaxis_values[:20]
+                            fig, ax = plt.subplots(figsize=(26,13))
+                            sns.scatterplot(x=xaxis_values, y=yaxis_values, color='blue', alpha=0.6, edgecolor='black', ax=ax)
+                            ax.set_title("Scatter Plot")
+                            ax.set_xlabel(xaxis)
+                            ax.set_ylabel(yaxis)
+                            plt.xticks(rotation=90)
+                            st.pyplot(fig)
+                        if viz_type == "Bar Chart":
+                            data_df = pd.DataFrame({xaxis: xaxis_values, yaxis: yaxis_values})
+                            aggregated_data = data_df.groupby(xaxis).sum().reset_index()
+                            xaxis_values = aggregated_data[xaxis]
+                            yaxis_values = aggregated_data[yaxis]
+                            if re.search("(.*?)-(.*?)", str(xaxis_values)) or re.search("(.*?)/(.*?)", str(xaxis_values)):
+                                xaxis_values=xaxis_values[:20]
+                                yaxis_values=yaxis_values[:20]
+                            fig, ax = plt.subplots(figsize=(26,13))
+                            sns.barplot(x=xaxis_values, y=yaxis_values, color='blue', ax=ax)
+                            ax.set_xlabel(xaxis)
+                            ax.set_ylabel(yaxis)
+                            ax.set_title("Bar Chart Example")
+                            plt.xticks(rotation=90)
+                            st.pyplot(fig)
+                        if viz_type == "Bubble Chart":
+                            data_df = pd.DataFrame({xaxis: xaxis_values, yaxis: yaxis_values})
+                            aggregated_data = data_df.groupby(xaxis).sum().reset_index()
+                            xaxis_values = aggregated_data[xaxis]
+                            yaxis_values = aggregated_data[yaxis]
+                            sub_data = pd.DataFrame({
+                                xaxis: xaxis_values,  
+                                yaxis: yaxis_values, 
+                                'size': yaxis_values  
+                            })
+                            fig, ax = plt.subplots(figsize=(26,13))
+                            sns.scatterplot(
+                                data=sub_data,x=xaxis,y=yaxis,size='size',hue=xaxis,alpha=0.6,edgecolor='black',palette="viridis",ax=ax
+                            )
+                            ax.set_title("Bubble Chart")
+                            ax.set_xlabel(xaxis)
+                            ax.set_ylabel(yaxis)
+                            st.pyplot(fig)
+                        if viz_type == "Heatmap":
                             try:
-                                sns.heatmap(heatmap_data, annot=True, fmt=".1f", cmap="YlGnBu", ax=ax)
-                                ax.set_title("Heatmap: {} vs {}".format(xaxis, yaxis))
-                                st.pyplot(fig)
+                                xaxis_values=xaxis_values[0:30]
+                                yaxis_values=yaxis_values[0:30]
+                                heatmap_data = pd.DataFrame({xaxis: xaxis_values, yaxis: yaxis_values})
+                                fig, ax = plt.subplots()
+                                try:
+                                    sns.heatmap(heatmap_data, annot=True, fmt=".1f", cmap="YlGnBu", ax=ax)
+                                    ax.set_title("Heatmap: {} vs {}".format(xaxis, yaxis))
+                                    st.pyplot(fig)
+                                except Exception as e:
+                                    heatmap_data = pd.DataFrame({xaxis: yaxis_values, yaxis: xaxis_values})
+                                    sns.heatmap(heatmap_data, annot=True, fmt=".1f", cmap="YlGnBu", ax=ax)
+                                    ax.set_title("Heatmap: {} vs {}".format(xaxis, yaxis))
+                                    st.pyplot(fig)
                             except Exception as e:
-                                heatmap_data = pd.DataFrame({xaxis: yaxis_values, yaxis: xaxis_values})
-                                sns.heatmap(heatmap_data, annot=True, fmt=".1f", cmap="YlGnBu", ax=ax)
-                                ax.set_title("Heatmap: {} vs {}".format(xaxis, yaxis))
-                                st.pyplot(fig)
-                        except Exception as e:
-                            continue    
-                    if viz_type == "Histogram":
-                        fig, ax = plt.subplots()
-                        sns.histplot(x=xaxis_values, y=yaxis_values, kde=False, color='blue', ax=ax)
-                        ax.set_title("Histogram of {}".format(xaxis))
-                        ax.set_xlabel(xaxis)
-                        ax.set_ylabel(yaxis)
-                        plt.xticks(rotation=90)
-                        st.pyplot(fig)
+                                continue    
+                        if viz_type == "Histogram":
+                            fig, ax = plt.subplots()
+                            sns.histplot(x=xaxis_values, y=yaxis_values, kde=False, color='blue', ax=ax)
+                            ax.set_title("Histogram of {}".format(xaxis))
+                            ax.set_xlabel(xaxis)
+                            ax.set_ylabel(yaxis)
+                            plt.xticks(rotation=90)
+                            st.pyplot(fig)
+                        if viz_type == "Pie Chart":
+                            data_df = pd.DataFrame({xaxis: xaxis_values, yaxis: yaxis_values})
+                            aggregated_data = data_df.groupby(xaxis).sum().reset_index()
+                            pie_data = aggregated_data[:10]
+                            labels = pie_data[xaxis]
+                            sizes = pie_data[yaxis]
+                            fig, ax = plt.subplots(figsize=(10, 10))
+                            wedges, texts, autotexts = ax.pie(
+                                sizes,
+                                labels=labels,
+                                autopct='%1.1f%%',
+                                startangle=90,
+                                colors=sns.color_palette("pastel"),
+                                textprops=dict(color="black"),
+                            )
+                            ax.legend(
+                                wedges,
+                                labels,
+                                title=xaxis,
+                                loc="center left",
+                                bbox_to_anchor=(1, 0.5),
+                            )
+                            ax.set_title("Pie Chart")
+                            st.pyplot(fig)
+                        if viz_type == "Line Chart":
+                            data_df = pd.DataFrame({xaxis: xaxis_values, yaxis: yaxis_values})
+                            aggregated_data = data_df.groupby(xaxis).sum().reset_index()
+                            xaxis_values = aggregated_data[xaxis]
+                            yaxis_values = aggregated_data[yaxis]
+                            fig, ax = plt.subplots(figsize=(15, 8))
+                            sns.lineplot(x=xaxis_values, y=yaxis_values, marker="o", ax=ax)
+                            ax.set_title("Line Chart")
+                            ax.set_xlabel(xaxis)
+                            ax.set_ylabel(yaxis)
+                            plt.xticks(rotation=90)
+                            st.pyplot(fig)
+                    except Exception as e:
+                        continue
         visualizer=Visualize_data()
         dict_=pandas.get_dictionary()
         promt_template=create_template.call(dict_)
