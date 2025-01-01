@@ -44,10 +44,8 @@ class Create_prompt_template():
             ("assistant", "Ok ill be generating an xml file based on the layout you provided, ill be considering on using the following charts: Scatter Plot, Bar Chart, Bubble Chart, Pie chart, Line Chart, Histogram"),
             ("user", "The data is: {context}\n understand the multi relation between the columns analyze them throughout and generate,make sure that you put the string or object or categorical values type in xaxis,an xml file. Donot provide anything else other than the XML file!!"),
             ("assistant", f"""```<?xml version="1.0" encoding="UTF-8"?>\n <root>{sample_prompt}"""),
-            ("user", "I said you to clearly understand the relation between the context and provide me a visulization, i need the relation which provide a deeper insight of the data"),
-            ("assistant", f"""```<?xml version="1.0" encoding="UTF-8"?>\n <root>{sample_prompt}"""),
-            ("user","I need more and more deeper understanding of data")
-
+            ("user", "I need the relation which provide a deeper insight of the data, as if you are explaining to a person who totally doesnt know about the data"),
+            ("assistant", f"""```<?xml version="1.0" encoding="UTF-8"?>\n <root>{sample_prompt}""")
 
         ]
         
@@ -76,6 +74,7 @@ class Process_pandas():
         for k in (column_index):
             if self.dataframe.iloc[:, k].dtype in ['int64', 'float64', 'int32', 'float32']:
                 self.dataframe.iloc[:, k].fillna(self.dataframe.iloc[:, k].mean(), inplace=True)
+        return self.dataframe
     
     def obtain_data(self,xaxis, yaxis):
         xaxis_values=self.dataframe.get(xaxis).values
