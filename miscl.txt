@@ -79,4 +79,60 @@ You are a xml file generator who needs to analyze columns and their relationship
         Fill the table with suggested visualization techniques based on the context.
         Ensure the table includes exactly five columns: "S.No", "Name of Visualization", "X-Axis Columns", "Y-Axis Columns", and a repeated "S.No" column.
         Output only the table in the exact format above, without any explanations or additional text.
+
+
+
+
+
         """
+
+
+("system","You are a data analyst tasked with identifying appropriate visualization techniques based on the relationships between columns in the provided data. No other explanation is needed to provide."),
+            ("user", "Now generate a table having columns: S.No	,Name of Visualization,X-Axis Columns, Y-Axis Columns,S.No"),
+            ("assistant", "S.No	| Name of Visualization | X-Axis Columns | Y-Axis Columns | S.No \n ------|------------------------|-------------|------------|-----"),
+            ("user", "The data is: {context}\n understand the multi relation between the columns and generate,an table having columns: S.No	Name of Visualization	X-Axis Columns	Y-Axis Columns	S.No strictly follow the table!!"),
+            ("assistant", f"S.No	| Name of Visualization | X-Axis Columns | Y-Axis Columns | Same S.No \n {sample_prompt}")
+def create_primary_prompt(dictionary):
+            key=list(dictionary.keys())
+            return f"1 | Bar Chart | {key[0]} | {key[1]} | 1"
+
+viz_=[]
+        temp_string=self.string
+        for index in range (1,50):
+            try:
+                pattern=rf"(\d)(.*?)(\d)"
+                match_=re.search(pattern, temp_string)
+                viz_.append(match_.group())
+                temp_string=temp_string[len(match_.group()):]
+            except Exception as e:
+                break
+
+        return viz_
+for i in range(index, 10):
+            try:
+                pattern = rf"<serial_no id=\d>(.*?)</serial_no>"
+                match = re.search(pattern, self.string, re.DOTALL)  
+                if match:
+                    row = match.group(1)  
+                    viz_type_pattern = r"<Type of Visualization>(.*?)</Type of Visualization>"
+                    xaxis_pattern = r"<xaxis>(.*?)</xaxis>"
+                    yaxis_pattern = r"<yaxis>(.*?)</yaxis>"
+                    viz_type_match = re.search(viz_type_pattern, row)
+                    xaxis_match = re.search(xaxis_pattern, row)
+                    yaxis_match = re.search(yaxis_pattern, row) 
+                    if viz_type_match and xaxis_match and yaxis_match:
+                        viz_type = viz_type_match.group(1).strip()
+                        xaxis = xaxis_match.group(1).strip()
+                        yaxis = yaxis_match.group(1).strip()
+                        
+                        viz_dict[i] = {"Type": viz_type, "X-Axis": xaxis, "Y-Axis": yaxis}
+            except Exception as e:
+                print(f"Error processing serial_no id={i}: {e}")
+                continue
+        return viz_dict
+
+
+data_df = pd.DataFrame({xaxis: xaxis_values, yaxis: yaxis_values})
+aggregated_data = data_df.groupby(xaxis).sum().reset_index()
+xaxis_values = aggregated_data[xaxis]
+yaxis_values = aggregated_data[yaxis]
