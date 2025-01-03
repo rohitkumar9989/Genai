@@ -31,7 +31,7 @@ class Create_prompt_template():
         print (sample_prompt)
         prompt = ChatPromptTemplate.from_messages(
         [
-            ("system","You are a data analyst tasked with identifying appropriate visualization techniques based on the relationships between columns in the provided data. No other explanation is needed to provide."),
+            ("system","You are a Exploratory Data Analyst tasked with identifying appropriate visualization techniques based on the relationships between columns in the provided data. No other explanation is needed to provide."),
             ("user", """Now generate a xml file which has the following elements 
             <serial_no id="[S.No]"
                 <Visualization_used>
@@ -41,11 +41,11 @@ class Create_prompt_template():
                 </Visualization_used>
             </serial_no>
             """),
-            ("assistant", "Ok ill be generating an xml file based on the layout you provided, ill be considering on using the following charts: Scatter Plot, Bar Chart, Bubble Chart, Pie chart, Line Chart, Histogram"),
+            ("assistant", "Ok ill be generating an xml file based on the layout you provided, ill be considering on using the following charts: Scatter Plot, Bar Chart, Bubble Chart, Pie chart, Line Chart, Histogram, Heatmap"),
             ("user", "The data is: {context}\n understand the multi relation between the columns analyze them throughout and generate,make sure that you put the string or object or categorical values type in xaxis,an xml file. Donot provide anything else other than the XML file!!"),
             ("assistant", f"""```<?xml version="1.0" encoding="UTF-8"?>\n <root>{sample_prompt}"""),
-            ("user", "I need the relation which provide a deeper insight of the data, as if you are explaining to a person who totally doesnt know about the data"),
-            ("assistant", f"""```<?xml version="1.0" encoding="UTF-8"?>\n <root>{sample_prompt}""")
+            ("user", "I need the Exploratory Data Analysis"),
+            ("assistant", f"""```<?xml version="1.0" encoding="UTF-8"?>\n <root>""")
 
         ]
         
