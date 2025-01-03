@@ -136,3 +136,16 @@ data_df = pd.DataFrame({xaxis: xaxis_values, yaxis: yaxis_values})
 aggregated_data = data_df.groupby(xaxis).sum().reset_index()
 xaxis_values = aggregated_data[xaxis]
 yaxis_values = aggregated_data[yaxis]
+
+
+data_df = pd.DataFrame({xaxis: xaxis_values, yaxis: yaxis_values})
+                        aggregated_data = data_df.groupby(xaxis).sum().reset_index()
+                        xaxis_values = aggregated_data[xaxis]
+                        yaxis_values = aggregated_data[yaxis]
+                        fig, ax = plt.subplots(figsize=(15, 8))
+                        sns.lineplot(x=xaxis_values, y=yaxis_values, marker="o", ax=ax)
+                        ax.set_title("Line Chart")
+                        ax.set_xlabel(xaxis)
+                        ax.set_ylabel(yaxis)
+                        plt.xticks(rotation=90)
+                        st.pyplot(fig)
