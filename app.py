@@ -86,15 +86,11 @@ if file_path:
                         st.pyplot(fig)
 
                     elif viz_type == "Heatmap":
-                        xaxis_values = xaxis_values[:30]
-                        yaxis_values = yaxis_values[:30]
-                        heatmap_data = pd.DataFrame({xaxis: xaxis_values, yaxis: yaxis_values})
                         fig, ax = plt.subplots()
                         try:
-                            sns.heatmap(heatmap_data, annot=True, fmt=".1f", cmap="YlGnBu", ax=ax)
+                            sns.heatmap(data, annot=True, fmt=".1f", cmap="YlGnBu", ax=ax)
                         except Exception:
-                            heatmap_data = pd.DataFrame({xaxis: yaxis_values, yaxis: xaxis_values})
-                            sns.heatmap(heatmap_data, annot=True, fmt=".1f", cmap="YlGnBu", ax=ax)
+                            sns.heatmap(data, annot=True, fmt=".1f", cmap="YlGnBu", ax=ax)
                         ax.set_title(f"Heatmap: {xaxis} vs {yaxis}")
                         st.pyplot(fig)
 
@@ -154,9 +150,7 @@ if file_path:
     data=", ".join(f"Column Name: {key} Its datatype: {value} \n" for key, value in dict_.items())
     output=chain.invoke({"context": data})
     extractor=Extract_data(output)
-    #st.text(output)
     viz_dict=extractor.extract_columns()
-    st.text(viz_dict)
     visualizer.run(viz_dict)
 else:
     pass
