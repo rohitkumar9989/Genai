@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import re
 import numpy as np
+import time
 
 
 st.title("Effective Data Visualization Tool")
@@ -20,8 +21,11 @@ if file_path:
     pandas=Process_pandas(data)
     flag, null=pandas.check_nan()
     if flag:
-        st.text("PreProcessing needs to be done.")
+        message=st.warning("Nan Values are present. Performing Processing.")
         data=pandas.preprocess_data(null)
+        time.sleep(3)
+        message.success("Done Processing")
+    questioner=Ask_questions(data)
 
     class Visualize_data():
         def run(self, data):
@@ -32,7 +36,7 @@ if file_path:
                     yaxis = sub_dictionary.get("Y-Axis")
                     xaxis_values, yaxis_values = pandas.obtain_data(xaxis, yaxis)
                     viz_type = sub_dictionary.get("Type")
-
+                    desc=sub_dictionary.get("desc")
                     if viz_type == "Scatter Plot":
                         data_df = pd.DataFrame({xaxis: xaxis_values, yaxis: yaxis_values})
                         aggregated_data = data_df.groupby(xaxis).sum().reset_index()
@@ -41,29 +45,44 @@ if file_path:
                         if re.search("(.*?)-(.*?)", str(xaxis_values)) or re.search("(.*?)/(.*?)", str(xaxis_values)):
                             xaxis_values = xaxis_values[:20]
                             yaxis_values = yaxis_values[:20]
-                        fig, ax = plt.subplots(figsize=(26, 13))
+                        fig, ax = plt.subplots()
                         sns.scatterplot(x=xaxis_values, y=yaxis_values, color='blue', alpha=0.6, edgecolor='black', ax=ax)
                         ax.set_title("Scatter Plot")
                         ax.set_xlabel(xaxis)
                         ax.set_ylabel(yaxis)
+                        st.subheader(desc)
                         plt.xticks(rotation=90)
                         st.pyplot(fig)
 
+
                     elif viz_type == "Bar Chart":
                         data_df = pd.DataFrame({xaxis: xaxis_values, yaxis: yaxis_values})
-                        aggregated_data = data_df.groupby(xaxis).sum().reset_index()
-                        xaxis_values = aggregated_data[xaxis]
+    
+                        if re.search(r"(.*?)-(.*?)", str(xaxis_values)) or re.search(r"(.*?)/(.*?)", str(xaxis_values)):
+                            try:
+                                data_df[xaxis] = pd.to_datetime(data_df[xaxis], errors='coerce')
+                                df1 = data_df.copy()
+                                df1['group_key'] = df1[xaxis].dt.year
+                                aggregated_data = df1.groupby('group_key')[yaxis].sum().reset_index()
+
+                            except Exception as e:
+                                st.error(f"Error converting {xaxis} to datetime: {e}")
+                                aggregated_data = data_df.groupby(xaxis).sum().reset_index()
+                        else:
+                            aggregated_data = data_df.groupby(xaxis).sum().reset_index()
+
+                        xaxis_values = aggregated_data.iloc[:, 0]
                         yaxis_values = aggregated_data[yaxis]
-                        if re.search("(.*?)-(.*?)", str(xaxis_values)) or re.search("(.*?)/(.*?)", str(xaxis_values)):
-                            xaxis_values = xaxis_values[:20]
-                            yaxis_values = yaxis_values[:20]
-                        fig, ax = plt.subplots(figsize=(26, 13))
+
+                        fig, ax = plt.subplots()
                         sns.barplot(x=xaxis_values, y=yaxis_values, color='blue', ax=ax)
                         ax.set_xlabel(xaxis)
                         ax.set_ylabel(yaxis)
                         ax.set_title("Bar Chart Example")
+                        st.subheader(desc)
                         plt.xticks(rotation=90)
                         st.pyplot(fig)
+
 
                     elif viz_type == "Bubble Chart":
                         data_df = pd.DataFrame({xaxis: xaxis_values, yaxis: yaxis_values})
@@ -75,7 +94,7 @@ if file_path:
                             yaxis: yaxis_values,
                             'size': yaxis_values
                         })
-                        fig, ax = plt.subplots(figsize=(26, 13))
+                        fig, ax = plt.subplots()
                         sns.scatterplot(
                             data=sub_data, x=xaxis, y=yaxis, size='size', hue=xaxis, alpha=0.6,
                             edgecolor='black', palette="viridis", ax=ax
@@ -83,6 +102,7 @@ if file_path:
                         ax.set_title("Bubble Chart")
                         ax.set_xlabel(xaxis)
                         ax.set_ylabel(yaxis)
+                        st.subheader(desc)
                         st.pyplot(fig)
 
                     elif viz_type == "Heatmap":
@@ -101,6 +121,7 @@ if file_path:
                         ax.set_xlabel(xaxis)
                         ax.set_ylabel(yaxis)
                         plt.xticks(rotation=90)
+                        st.subheader(desc)
                         st.pyplot(fig)
 
                     elif viz_type == "Pie Chart":
@@ -109,7 +130,7 @@ if file_path:
                         pie_data = aggregated_data[:10]
                         labels = pie_data[xaxis]
                         sizes = pie_data[yaxis]
-                        fig, ax = plt.subplots(figsize=(10, 10))
+                        fig, ax = plt.subplots()
                         wedges, texts, autotexts = ax.pie(
                             sizes,
                             labels=labels,
@@ -126,12 +147,25 @@ if file_path:
                             bbox_to_anchor=(1, 0.5),
                         )
                         ax.set_title(f"Pie Chart of {xaxis} vs {yaxis}")
+                        st.subheader(desc)
                         st.pyplot(fig)
 
                     elif viz_type == "Line Chart":
                         data_df = pd.DataFrame({xaxis: xaxis_values, yaxis: yaxis_values})
-                        aggregated_data = data_df.groupby(xaxis).sum().reset_index()
-                        xaxis_values = aggregated_data[xaxis]
+                        if re.search(r"(.*?)-(.*?)", str(xaxis_values)) or re.search(r"(.*?)/(.*?)", str(xaxis_values)):
+                            try:
+                                data_df[xaxis] = pd.to_datetime(data_df[xaxis], errors='coerce')
+                                df1 = data_df.copy()
+                                df1['group_key'] = df1[xaxis].dt.year
+                                aggregated_data = df1.groupby('group_key')[yaxis].sum().reset_index()
+
+                            except Exception as e:
+                                st.error(f"Error converting {xaxis} to datetime: {e}")
+                                aggregated_data = data_df.groupby(xaxis).sum().reset_index()
+                        else:
+                            aggregated_data = data_df.groupby(xaxis).sum().reset_index()
+
+                        xaxis_values = aggregated_data.iloc[:, 0]
                         yaxis_values = aggregated_data[yaxis]
                         fig, ax = plt.subplots(figsize=(15, 8))
                         sns.lineplot(x=xaxis_values, y=yaxis_values, marker="o", ax=ax)
@@ -139,19 +173,27 @@ if file_path:
                         ax.set_xlabel(xaxis)
                         ax.set_ylabel(yaxis)
                         plt.xticks(rotation=90)
+                        st.subheader(desc)
                         st.pyplot(fig)
 
-                except Exception:
-                    continue
+
+                except Exception as e:
+                    print (e)
     visualizer=Visualize_data()
     dict_=pandas.get_dictionary()
     promt_template=create_template.call(dict_)
     chain=promt_template|llm_model
-    data=", ".join(f"Column Name: {key} Its datatype: {value} \n" for key, value in dict_.items())
-    output=chain.invoke({"context": data})
-    extractor=Extract_data(output)
-    viz_dict=extractor.extract_columns()
-    visualizer.run(viz_dict)
+    dictionary=", ".join(f"Column Name: {key} Its datatype: {value} \n" for key, value in dict_.items())
+    with st.spinner("Thinking..."):
+        output=chain.invoke({"context": dictionary, "values":data.iloc[:50]})
+        extractor=Extract_data(output)
+        viz_dict=extractor.extract_columns()
+
+    with st.spinner("Visualizing the data"):  
+        visualizer.run(viz_dict)
+
+    ## Question Modelling
+    st.text(questioner.create_question("How many maritial status are there"))
 else:
     pass
 
