@@ -1,6 +1,10 @@
 from langchain_huggingface import HuggingFaceEndpoint
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.llms import Ollama
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.vectorstores import FAISS
+from langchain_core.documents import Document
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 import re
 from dotenv import load_dotenv
 import os
@@ -24,11 +28,11 @@ class Create_prompt_template():
                             <xaxis>{key[0]}</xaxis>
                             <yaxis>{key[1]}</yaxis>
                             <Type of Visualization> Bar Chart</Type of Visualization>
+                            <description> </description>
                         </Visualization_used>
                     </serial_no>
                     """
         sample_prompt=create_primary_prompt(dictionary)
-        print (sample_prompt)
         prompt = ChatPromptTemplate.from_messages(
         [
             ("system","You are a Exploratory Data Analyst tasked with identifying appropriate visualization techniques based on the relationships between columns in the provided data. No other explanation is needed to provide."),
@@ -40,13 +44,11 @@ class Create_prompt_template():
                     <Type of Visualization> </Type of Visualization>
                 </Visualization_used>
             </serial_no>
+             If having a categorical data then put it in the X-axis
             """),
-            ("assistant", "Ok ill be generating an xml file based on the layout you provided, ill be considering on using the following charts: Scatter Plot, Bar Chart, Bubble Chart, Pie chart, Line Chart, Histogram, Heatmap"),
-            ("user", "The data is: {context}\n understand the multi relation between the columns analyze them throughout and generate,make sure that you put the string or object or categorical values type in xaxis,an xml file. Donot provide anything else other than the XML file!!"),
-            ("assistant", f"""```<?xml version="1.0" encoding="UTF-8"?>\n <root>{sample_prompt}"""),
-            ("user", "I need the Exploratory Data Analysis"),
-            ("assistant", f"""```<?xml version="1.0" encoding="UTF-8"?>\n <root>""")
-
+            ("assistant", "Ok ill be generating an xml file based on the layout you provided, ill be considering on using the following charts: ***Scatter Plot, Bar Chart, Bubble Chart, Pie chart, Line Chart, Histogram***"),
+            ("user", "The data is: <columns>{context}</columns>\n.*****I need the description of that visulization within the <description></description> tag!!!*** \n For your better understanding here is the 50 top data: {values}, understand the relation between values and ****provide Efficient EDA Visualizations****, ****generate around 15 most efficient reports****!"),
+            ("assistant", f"""```<?xml version="1.0" encoding="UTF-8"?>\n <root>{sample_prompt}""")
         ]
         
         )
@@ -75,7 +77,7 @@ class Process_pandas():
             if self.dataframe.iloc[:, k].dtype in ['int64', 'float64', 'int32', 'float32']:
                 self.dataframe.iloc[:, k].fillna(self.dataframe.iloc[:, k].mean(), inplace=True)
         return self.dataframe
-    
+        
     def obtain_data(self,xaxis, yaxis):
         xaxis_values=self.dataframe.get(xaxis).values
         yaxis_values=self.dataframe.get(yaxis).values
@@ -100,21 +102,58 @@ class Extract_data():
                 viz_type_pattern = r"<Type of Visualization>(.*?)</Type of Visualization>"
                 xaxis_pattern = r"<xaxis>(.*?)</xaxis>"
                 yaxis_pattern = r"<yaxis>(.*?)</yaxis>"
+                desc_pattern=r"<description>(.*?)</description>"
                 
                 viz_type_match = re.search(viz_type_pattern, row)
                 xaxis_match = re.search(xaxis_pattern, row)
                 yaxis_match = re.search(yaxis_pattern, row)
+                desc_match=re.search(desc_pattern, row)
                 
                 if viz_type_match and xaxis_match and yaxis_match:
                     viz_type = viz_type_match.group(1).strip()
                     xaxis = xaxis_match.group(1).strip()
                     yaxis = yaxis_match.group(1).strip()
-                    
-                    # Add to dictionary
-                    viz_dict[serial_no] = {"Type": viz_type, "X-Axis": xaxis, "Y-Axis": yaxis}
+                    desc=desc_match.group(1).strip()
+
+                    viz_dict[serial_no] = {"Type": viz_type, "X-Axis": xaxis, "Y-Axis": yaxis, "desc":desc}
         except Exception as e:
             print(f"Error processing visualizations: {e}")
         return viz_dict
+    
+class Ask_questions():
+    def __init__ (self, dataframe):
+        self.dataframe=dataframe
+        self.columns = ",".join(self.dataframe.columns)
+        self.doc_columns=[Document(self.columns)]
+        self.embedding=HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+        self.Rec_char=RecursiveCharacterTextSplitter(separators=[","], chunk_size=1, chunk_overlap=1)
+        self.splitted_docs=self.Rec_char.split_documents(self.doc_columns)
+        self.faiss=FAISS.from_documents(self.splitted_docs, self.embedding).as_retriever()
+        self.llm_model=HuggingFaceEndpoint(model="meta-llama/Meta-Llama-3-8B-Instruct")
+
+    def create_question (self, query):
+        similar_searches=self.faiss.invoke(query)
+        self.retrieved_columns=[]
+        for pg in similar_searches:
+            self.retrieved_columns.append(str(pg.page_content).replace(",", ""))
+        print (self.retrieved_columns)
+        self.final_dataframe=self.dataframe[self.retrieved_columns]
+        prompt=ChatPromptTemplate.from_template(
+            """You are a Question answering bot who takes the dataset as refernce to extract information.
+            <question>
+            {query}.
+            </question>
+            This is the dataset for your reference is <dataset>{dataframe}</dataset>. ****Provide me a detailed summary paragraph about 80-100 words****, clear and concise, as if explaining to layman, ***no code needed!!***, ****I need only explanation of question asked nothing else required!!!****"""
+        )
+        chain=prompt | self.llm_model
+        return chain.invoke({"query": query, "dataframe": self.final_dataframe})
+
+
+
+        
+
+
+
 
 
 
