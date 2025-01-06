@@ -149,3 +149,10 @@ data_df = pd.DataFrame({xaxis: xaxis_values, yaxis: yaxis_values})
                         ax.set_ylabel(yaxis)
                         plt.xticks(rotation=90)
                         st.pyplot(fig)
+"""You are a Question answering bot who takes the dataset as refernce to extract information.
+            <question>
+            {query}.
+            </question>
+            This is the dataset for your reference is <dataset>{dataframe}</dataset>. ****Provide me a detailed summary paragraph about 80-100 words clear and concise, as if explaining to layman****  ***no code needed!!***
+            enclose the explanation within the <explanation><explanation>tag
+            """
