@@ -121,36 +121,24 @@ class Extract_data():
         return viz_dict
     
 class Ask_questions():
-    def __init__ (self, dataframe):
+    def __init__ (self, dataframe, llm_model):
         self.dataframe=dataframe
-        self.columns = ",".join(self.dataframe.columns)
-        self.doc_columns=[Document(self.columns)]
-        self.embedding=HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
-        self.Rec_char=RecursiveCharacterTextSplitter(separators=[","], chunk_size=1, chunk_overlap=1)
-        self.splitted_docs=self.Rec_char.split_documents(self.doc_columns)
-        self.faiss=FAISS.from_documents(self.splitted_docs, self.embedding).as_retriever()
-        self.llm_model=HuggingFaceEndpoint(model="meta-llama/Meta-Llama-3-8B-Instruct")
+        self.llm_model=llm_model
 
     def create_question (self, query):
-        similar_searches=self.faiss.invoke(query)
-        self.retrieved_columns=[]
-        for pg in similar_searches:
-            self.retrieved_columns.append(str(pg.page_content).replace(",", ""))
-        print (self.retrieved_columns)
-        self.final_dataframe=self.dataframe[self.retrieved_columns]
         prompt=ChatPromptTemplate.from_messages([
             ("system", "You are a Question Answering Assistant who answers the questions based on the given dataset"),
             ("user", """Here is the question for you <question>{question}</question>, \nHere is the dataset for you to use to answer the question <dataset>{dataset}</dataset>\n 
              ***Enclose the answer wihtin the <answer></answer> tag!!!!***,
              **After answering end the converstaion. I just need the answer for what i asked, thats it!!!!!**
-             
+             **Explain in detail, your answers have to be in the perspective of a Data Analyst**
              
              """),
             ("system", "<answer>")
 
         ])
         chain=prompt | self.llm_model
-        return chain.invoke({"question": query, "dataset": self.final_dataframe})
+        return chain.invoke({"question": query, "dataset": self.dataframe})
 
 
 
