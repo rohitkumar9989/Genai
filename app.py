@@ -191,11 +191,17 @@ if file_path:
 
     with st.spinner("Visualizing the data"):  
         visualizer.run(viz_dict)
-
-    ## Question Modelling
-    st.text(questioner.create_question("How many maritial status are there"))
 else:
     pass
+text=st.text_input("Enter your Question")
+if text:
+    question = questioner.create_question(text)
+    question=question[:question.index("</answer>")]
+    words = question.split()
+    chunk_size = 20
+    for i in range(0, len(words), chunk_size):
+        st.write(" ".join(words[i:i + chunk_size]))
+
 
 
 
