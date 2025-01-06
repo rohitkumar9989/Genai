@@ -138,15 +138,19 @@ class Ask_questions():
             self.retrieved_columns.append(str(pg.page_content).replace(",", ""))
         print (self.retrieved_columns)
         self.final_dataframe=self.dataframe[self.retrieved_columns]
-        prompt=ChatPromptTemplate.from_template(
-            """You are a Question answering bot who takes the dataset as refernce to extract information.
-            <question>
-            {query}.
-            </question>
-            This is the dataset for your reference is <dataset>{dataframe}</dataset>. ****Provide me a detailed summary paragraph about 80-100 words****, clear and concise, as if explaining to layman, ***no code needed!!***, ****I need only explanation of question asked nothing else required!!!****"""
-        )
+        prompt=ChatPromptTemplate.from_messages([
+            ("system", "You are a Question Answering Assistant who answers the questions based on the given dataset"),
+            ("user", """Here is the question for you <question>{question}</question>, \nHere is the dataset for you to use to answer the question <dataset>{dataset}</dataset>\n 
+             ***Enclose the answer wihtin the <answer></answer> tag!!!!***,
+             **After answering end the converstaion. I just need the answer for what i asked, thats it!!!!!**
+             
+             
+             """),
+            ("system", "<answer>")
+
+        ])
         chain=prompt | self.llm_model
-        return chain.invoke({"query": query, "dataframe": self.final_dataframe})
+        return chain.invoke({"question": query, "dataset": self.final_dataframe})
 
 
 
