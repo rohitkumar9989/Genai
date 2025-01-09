@@ -125,20 +125,35 @@ class Ask_questions():
         self.dataframe=dataframe
         self.llm_model=llm_model
 
+    def create_chunks(self, system_prompt, user_prompt, end_message ,threshold=5000, model_threshold=2000):
+        """
+        Used for creating chunks of the dataset for the model to easily look onto the threshold
+        data
+        """
+        prompt=[]
+        prompt.extend(system_prompt)
+        prompt.extend(user_prompt)
+        k=1
+        for i in range (int(threshold/model_threshold)):
+            prompt.append(("user", f"""Here is the {i}th chunk of the dataset: {self.dataframe[:model_threshold*k]}"""))
+            k+=1
+        prompt.extend(end_message)
+
+        return prompt
+
     def create_question (self, query):
-        prompt=ChatPromptTemplate.from_messages([
-            ("system", "You are a Question Answering Assistant who answers the questions based on the given dataset"),
-            ("user", """Here is the question for you <question>{question}</question>, \nHere is the dataset for you to use to answer the question <dataset>{dataset}</dataset>\n 
+        system_prompt=[("system", "You are a Question Answering Assistant who answers the questions based on the given dataset. You will be provided with the dataset in multiple chats remember them and consider them as whole!")]
+        user_prompt=[("user", """Question: <question>{question}</question>, \n The dataset for you to use to answer is provided in the form of chunks in multiple chat instances below just after this message!\n 
              ***Enclose the answer wihtin the <answer></answer> tag!!!!***,
              **After answering end the converstaion. I just need the answer for what i asked, thats it!!!!!**
              **Explain in detail, your answers have to be in the perspective of a Data Analyst**
-             
-             """),
-            ("system", "<answer>")
-
-        ])
+             **The data would be provided in chunks below in multiple instances remember them as whole**
+             """)]
+        end_message=[("system", "<answer>")]
+        c_prompt=self.create_chunks(system_prompt, user_prompt, end_message)
+        prompt=ChatPromptTemplate.from_messages(c_prompt)
         chain=prompt | self.llm_model
-        return chain.invoke({"question": query, "dataset": self.dataframe})
+        return chain.invoke({"question": query})
 
 
 
