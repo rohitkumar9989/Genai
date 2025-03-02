@@ -9,21 +9,25 @@ from langchain_groq import ChatGroq
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_core.messages import AIMessage
+from langchain_core.output_parsers import StrOutputParser
 import re
 from dotenv import load_dotenv
 import os
+import math
 load_dotenv()
-os.environ["HF_TOKEN"]=os.getenv("HF_TOKEN")
 os.environ["LANGCHAIN_API_KEY"]=os.getenv("LANGCHAIN_API_KEY")
 os.environ["LANGCHAIN_TRACING_V2"]="true"
 os.environ["LANGCHAIN_PROJECT"]="FIRST_GENAI_APPLICATION"
+
+output_parser=StrOutputParser()
 class llm_create():
-    def __call__(self, *args, **kwds):
-        llm=HuggingFaceEndpoint(model="meta-llama/Meta-Llama-3-8B-Instruct")
+    def subroutine1(self, *args, **kwds):
+        llm=HuggingFaceEndpoint(model="mistralai/Mixtral-8x7B-Instruct-v0.1")
         return llm
 
-    def subroutine(self, *args):
-        llm=ChatGroq(model="llama-3.1-8b-instant", api_key=os.getenv("GROQ_API_KEY"))
+    def subroutine2(self, *args):
+        llm=ChatGroq(model="llama-3.3-70b-versatile", api_key=os.getenv("GROQ_API_KEY"))
         return llm
     
 class Create_prompt_template():
@@ -45,7 +49,7 @@ class Create_prompt_template():
         [
             ("system","You are a Exploratory Data Analyst tasked with identifying appropriate visualization techniques based on the relationships between columns in the provided data. No other explanation is needed to provide."),
             ("user", """Now generate a xml file which has the following elements 
-            <serial_no id="[S.No]"
+            <serial_no id=[S.No]>
                 <Visualization_used>
                     <xaxis>X-axis Column name</xaxis>
                     <yaxis>"Column name wrt other axis to whom this visulization has to be done" </yaxis>
@@ -100,7 +104,7 @@ class Extract_data():
         index=2
         viz_dict = {}
         try:
-            pattern = r"<serial_no id=(\d+)>(.*?)</serial_no>"
+            pattern = r"<serial_no id=(.*?)>(.*?)</serial_no>"
             matches = re.finditer(pattern, self.string, re.DOTALL) 
             
             for match in matches:
@@ -128,46 +132,47 @@ class Extract_data():
             print(f"Error processing visualizations: {e}")
         return viz_dict
     
-class Ask_questions():
-    def __init__ (self, dataframe, llm_model):
+
+
+class Ask_questions:
+    def __init__ (self, dataframe, llm_model, dataset_name):
+        global output_parser
         self.dataframe=dataframe
         self.llm_model=llm_model
+        self.dataset_name=dataset_name
 
-    def create_chunks(self, system_prompt, user_prompt, end_message,dict ,threshold=6000, model_threshold=2000):
+    def _generate_columns_prompt (self):
+        columns_list=list(self.dataframe.columns)
+        prompt=f"""
+            You are an Coding data analyst wherin you are provided with the dataset in the current directory as {self.dataset_name.name}, which has the following columns in it:
         """
-        Used for creating chunks of the dataset for the model to easily look onto the threshold
-        data
+        for col in columns_list:
+            prompt+=f"Column name: {str(col)}"
+        
+        prompt+="""
+            Your task is to genrate a code based on the question asked below, it has to be a python code.
+            Here is the question: 
         """
-        prompt=[]
-        prompt.extend(system_prompt)
-        prompt.extend(user_prompt)
-        start=0
-        end=model_threshold
-        total=int(threshold/model_threshold)
-        for i in range (int(threshold/model_threshold)):
-            prompt.extend([("user", f"""Here is the {i}th record of the dataset: Columns: {list(dict.keys())} Data corresponding to columns:{self.dataframe.iloc[start:end,:]}\n""")])
-            start+=model_threshold
-            end+=model_threshold
-        prompt.extend(end_message)
-
         return prompt
 
-    def create_question (self, query, dict):
-        system_prompt=[("system", "You are a Question Answering Assistant who answers the questions based on the given dataset. You will be provided with the dataset in multiple chats remember them and consider them as whole!")]
-        user_prompt=[("user", "ABove given records are the full dataset!"),
-        ("user", """Question: <question>{question}</question>, \n The dataset for you to use to answer is provided in the form of chunks in multiple chat instances below just after this message!\n 
-             ***Enclose the answer wihtin the <answer></answer> tag!!!!***,
-             **After answering end the converstaion. I just need the answer for what i asked, thats it!!!!!**
-             **Explain in detail, your answers have to be in the perspective of a Data Analyst**
-             **The data would be provided in chunks below in multiple instances remember them as whole**
-             """),]
-        end_message=[("system", "<answer>")]
-        c_prompt=self.create_chunks(system_prompt, user_prompt, end_message, dict)
-        prompt=ChatPromptTemplate.from_messages(c_prompt)
-        chain=prompt | self.llm_model
-        return chain.invoke({"question": query})
+    def create_answer (self, query):
+        column_prompt=self._generate_columns_prompt()
 
+        print(column_prompt)
+        column_prompt+=f"""{query} 
+            **And generate the answer within the <code></code> tag!!**, \n
+            **<code></code> tag should only contain code as it is going to be passed for copilation directly!!!**
+        """
+        chatprompt=ChatPromptTemplate.from_messages([
+            ("system", column_prompt),
+            ("assistant", "<code>")
+        ])
+        formatted_prompt = chatprompt.format()  
+        answer = self.llm_model.invoke(formatted_prompt)  
+        return output_parser.invoke(answer)
 
+        
+        
 
         
 
