@@ -10,3 +10,5 @@ python-dotenv
 langchain_huggingface
 sentence_transformers
 faiss-cpu
+langchain-experimental
+langchain-chatgroq
