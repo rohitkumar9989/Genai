@@ -11,6 +11,7 @@ from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.messages import AIMessage
 from langchain_core.output_parsers import StrOutputParser
+from langchain_experimental.agents import create_csv_agent
 import re
 from dotenv import load_dotenv
 import os
@@ -22,10 +23,6 @@ os.environ["LANGCHAIN_PROJECT"]="FIRST_GENAI_APPLICATION"
 
 output_parser=StrOutputParser()
 class llm_create():
-    def subroutine1(self, *args, **kwds):
-        llm=HuggingFaceEndpoint(model="meta-llama/Meta-Llama-3-8B-Instruct")
-        return llm
-
     def subroutine2(self, *args):
         llm=ChatGroq(model="llama-3.3-70b-versatile", api_key=os.getenv("GROQ_API_KEY"))
         return llm
@@ -140,47 +137,8 @@ class Ask_questions:
         self.dataframe=dataframe
         self.llm_model=llm_model
         self.dataset_name=dataset_name
+        self.agent = create_csv_agent(self.llm_model, self.dataset_name , verbose=True, allow_dangerous_code=True)
 
-    def _generate_columns_prompt (self):
-        columns_list=list(self.dataframe.columns)
-        prompt=f"""
-            You are an Coding data analyst wherin you are provided with the dataset in the current directory as {self.dataset_name.name}, which has the following columns in it:
-        """
-        for col in columns_list:
-            prompt+=f"Column name: {str(col)}"
-        
-        prompt+="""
-            Your task is to genrate a code based on the question asked below, it has to be a python code.
-            Here is the question: 
-        """
-        return prompt
-
-    def create_answer (self, query):
-        column_prompt=self._generate_columns_prompt()
-
-        print(column_prompt)
-        column_prompt+=f"""{query} 
-            **And generate the answer within the <code></code> tag!!**, \n
-            **<code></code> tag should only contain code as it is going to be passed for copilation directly!!!**
-        """
-        chatprompt=ChatPromptTemplate.from_messages([
-            ("system", column_prompt),
-            ("assistant", "<code>")
-        ])
-        formatted_prompt = chatprompt.format()  
-        answer = self.llm_model.invoke(formatted_prompt)  
-        return output_parser.invoke(answer)
-
-        
-        
-
-        
-
-
-
-
-
-
-            
-
-    
+    def answer_question(self, question):
+        response=self.agent.run(question)
+        return output_parser.invoke(response)
