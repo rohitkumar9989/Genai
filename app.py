@@ -7,13 +7,14 @@ import seaborn as sns
 import re
 import numpy as np
 import time
+from langchain_core.output_parsers import StrOutputParser
 
 
 st.title("Effective Data Visualization Tool")
 llm=llm_create()
 with st.spinner("Loading the model"):
-    llm_model1=llm.subroutine1()
-    llm_model2=llm.subroutine1()
+    llm_model1=llm.subroutine2()
+    llm_model2=llm.subroutine2()
 create_template=Create_prompt_template()
 file_path=st.file_uploader(label="Enter the csv file which you want to create visualization on: ")
 if file_path:
@@ -177,7 +178,8 @@ if file_path:
     dictionary=", ".join(f"Column Name: {key} Its datatype: {value} \n" for key, value in dict_.items())
     with st.spinner("Thinking..."):
         output=chain.invoke({"context": dictionary, "values":data.iloc[:50]})
-        print (output)
+        pars=StrOutputParser()
+        output=pars.invoke(output)
         extractor=Extract_data(output)
         viz_dict=extractor.extract_columns()
 
