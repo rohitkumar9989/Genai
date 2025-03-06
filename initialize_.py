@@ -23,7 +23,7 @@ os.environ["LANGCHAIN_PROJECT"]="FIRST_GENAI_APPLICATION"
 output_parser=StrOutputParser()
 class llm_create():
     def subroutine1(self, *args, **kwds):
-        llm=HuggingFaceEndpoint(model="mistralai/Mixtral-8x7B-Instruct-v0.1")
+        llm=HuggingFaceEndpoint(model="meta-llama/Meta-Llama-3-8B-Instruct")
         return llm
 
     def subroutine2(self, *args):
@@ -131,7 +131,7 @@ class Extract_data():
         except Exception as e:
             print(f"Error processing visualizations: {e}")
         return viz_dict
-    
+        
 
 
 class Ask_questions:
