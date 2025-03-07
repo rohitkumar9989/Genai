@@ -23,9 +23,15 @@ os.environ["LANGCHAIN_PROJECT"]="FIRST_GENAI_APPLICATION"
 
 output_parser=StrOutputParser()
 class llm_create():
-    def subroutine2(self, *args):
-        llm=ChatGroq(model="llama-3.3-70b-versatile", api_key=os.getenv("GROQ_API_KEY"))
+    def __init__(self):
+        self.groq_key=os.getenv("GROQ_API_KEY")
+    def subroutine_main(self, *args):
+        llm=ChatGroq(model="llama-3.3-70b-versatile", api_key=self.groq_key)
         return llm
+
+    def questionare_lightweight_model(self):
+        model=ChatGroq(model="gemma2-9b-it", api_key=self.groq_key)
+        return model
     
 class Create_prompt_template():
     def call (self, dictionary):
