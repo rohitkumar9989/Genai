@@ -13,9 +13,14 @@ from langchain_core.output_parsers import StrOutputParser
 st.title("Effective Data Visualization Tool")
 if os.path.exists("datasets")==False:
     os.mkdir("datasets")
-llm=llm_create()
-with st.spinner("Loading the model"):
-    llm_model1=llm.subroutine2()
+if 'llm_model1' not in st.session_state:
+    llm = llm_create()
+    with st.spinner("Loading the model"):
+        st.session_state.llm_model1 = llm.subroutine_main()
+        st.session_state.questionare_lw_model = llm.questionare_lightweight_model()
+else:
+    llm_model1 = st.session_state.llm_model1
+    questionare_lw_model = st.session_state.questionare_lw_model
 create_template=Create_prompt_template()
 csv_data=st.file_uploader(label="Enter the csv file which you want to create visualization on: ")
 if csv_data:
@@ -31,7 +36,7 @@ if csv_data:
             data=pandas.preprocess_data(null)
             time.sleep(3)
             message.success("Done Processing")
-        questioner=Ask_questions(data, llm_model1, file_path)
+        questioner=Ask_questions(data, questionare_lw_model, file_path)
 
         class Visualize_data():
             def run(self, data):
