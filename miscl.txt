@@ -156,3 +156,36 @@ data_df = pd.DataFrame({xaxis: xaxis_values, yaxis: yaxis_values})
             This is the dataset for your reference is <dataset>{dataframe}</dataset>. ****Provide me a detailed summary paragraph about 80-100 words clear and concise, as if explaining to layman****  ***no code needed!!***
             enclose the explanation within the <explanation><explanation>tag
             """
+class Generate_relations:
+    def __init__ (self, llm_model, dataset_name):
+        self.llm_model=llm_model
+        self.dataset_name=dataset_name
+        self.prompt=ChatPromptTemplate.from_messages([
+            ("system", """You are provided with a data i want you to dynamically place them in xaxis and yaxis placeholders in the following xml format:\n
+                        <1>
+                            <xaxis> </xaxis>
+                            <yaxis> </yaxis>
+                        </1>\n
+                        These place holders must have xaxis columns and yaxis columns which are present in the text data that i provide.
+                        """),
+            ("user", """Here is the text data: <data> {context}</data>
+             I want you to strictky follow this format for the output:<1>
+                            <xaxis> </xaxis>
+                            <yaxis> </yaxis>
+                        </1>\n """),
+            ("assistant", """
+                        <?xml version="1.0" encoding="UTF-8"?>\n <root>
+                        """)
+        ])
+        self.agent=create_csv_agent(self.llm_model, self.dataset_name, verbose=True, allow_dangerous_code=True)
+    def create_relations(self):
+        #Creates the relations between the values in the datset
+        relations=self.agent.run("Generate the columns relation, generate around max 15 such relation nad minimum as 5")
+        relation_output=output_parser.invoke(relations)
+
+        chain=self.prompt | self.llm_model
+        llm_otp=chain.invoke({"context": relation_output})
+        return output_parser.invoke(llm_otp)
+
+
+        #return chain.invoke("Generate the columns relation, generate around max 15 such relation nad minimum as 7")
