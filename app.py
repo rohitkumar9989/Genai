@@ -27,13 +27,18 @@ csv_data=st.file_uploader(label="Enter the csv file which you want to create vis
 if csv_data:
     file_name=csv_data.name
     flag_ste=True
+
+    first_iteration=True
     if "state" not in st.session_state:
         st.session_state.state=file_name
     else:
+        first_iteration=False
         if st.session_state["state"]==file_name:
             flag_ste=False
         else:
+            st.session_state.state=file_name
             flag_ste=True
+    st.write(file_name, st.session_state["state"])
     file_path=os.path.join("datasets", csv_data.name)
     if os.path.exists(file_path)==False:
         st.write("Please move the csv data into the `datasets` folder")
@@ -202,7 +207,7 @@ if csv_data:
                     except Exception as e:
                         print (e)
         visualizer=Visualize_data()
-        if flag_ste==True:
+        if flag_ste or first_iteration:
             dict_=pandas.get_dictionary()
             promt_template=create_template.call(dict_)
             chain=promt_template|llm_model1
