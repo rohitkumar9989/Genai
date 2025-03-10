@@ -10,7 +10,7 @@ An AI-powered data visualization tool that transforms raw CSV data into actionab
 
 ## 🚀 Features
 
-- **Drag-and-Drop CSV Upload**: Instantly process datasets with automated NaN handling.
+- **Select CSV file and Upload**: Instantly process datasets with automated NaN handling.
 - **Auto-Visualization**: Generates scatter plots, bar charts, line charts, histograms, and pie charts.
 - **AI-Powered Q&A**: Ask questions like *"Show sales trends"* or *"Explain outliers"* and get instant answers.
 - **One-Click Downloads**: Export visualizations as PNG files.
@@ -46,7 +46,8 @@ The app auto-generates charts based on column relationships.
 Ask Questions
 Type natural language queries in the chat-style panel (e.g., "Which product has the highest revenue?").
 
-Demo <!-- Replace with your demo GIF/screenshot -->
+Demo ![image](https://github.com/user-attachments/assets/80651320-40ad-4955-b820-0b811228459d)
+
 
 🛠️ Technologies
 Frontend: Streamlit
