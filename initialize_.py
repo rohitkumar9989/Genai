@@ -12,7 +12,10 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.messages import AIMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_experimental.agents import create_csv_agent
+from transformers import TapasTokenizer, TapasForQuestionAnswering
+import torch
 import re
+import pandas as pd
 from dotenv import load_dotenv
 import os
 import math
@@ -61,7 +64,7 @@ class Create_prompt_template():
             </serial_no>
              If having a categorical data then put it in the X-axis
             """),
-            ("assistant", "Ok ill be generating an xml file based on the layout you provided, ill be considering on using the following charts: ***Scatter Plot, Bar Chart, Bubble Chart, Pie chart, Line Chart, Histogram***"),
+            ("assistant", "Ok ill be generating an xml file based on the layout you provided, ill be considering on using the following charts: ***Bar Chart, Bubble Chart, Pie chart, Line Chart***"),
             ("user", "The data is: <columns>{context}</columns>\n.*****I need the description of that visulization within the <description></description> tag!!!*** \n For your better understanding here is the 50 top data: {values}, understand the relation between values and ****provide Efficient EDA Visualizations****, ****generate around 15 most efficient reports****!"),
             ("assistant", f"""```<?xml version="1.0" encoding="UTF-8"?>\n <root>{sample_prompt}""")
         ]
@@ -138,13 +141,39 @@ class Extract_data():
 
 
 class Ask_questions:
-    def __init__ (self, dataframe, llm_model, dataset_name):
+    def __init__ (self, dataset_name):
         global output_parser
-        self.dataframe=dataframe
-        self.llm_model=llm_model
+        self.groq_key=os.getenv("GROQ_API_KEY")
         self.dataset_name=dataset_name
-        self.agent = create_csv_agent(self.llm_model, self.dataset_name , verbose=True, allow_dangerous_code=True)
+        #self.agent_gpt = create_csv_agent(HuggingFaceEndpoint(model="mistralai/Mistral-7B-Instruct-v0.3", self.dataset_name , verbose=True, allow_dangerous_code=True)
+        self.agent_gemma=create_csv_agent(ChatGroq(model="gemma2-9b-it", api_key=self.groq_key), self.dataset_name , verbose=True, allow_dangerous_code=True)
 
-    def answer_question(self, question):
-        response=self.agent.run(question)
+        #model_name = "google/tapas-base-finetuned-wtq"
+        #self.tokenizer = TapasTokenizer.from_pretrained(model_name)
+        #self.model = TapasForQuestionAnswering.from_pretrained(model_name)
+
+    def answer_question(self, question, model_choice):
+        #if model_choice=="ChatGPT":
+        #    response=self.agent_gpt.run(question)
+        if model_choice=="Gemma":
+            response=self.agent_gemma.run(question)
+        #else:
+        #    data=pd.read_csv(self.dataset_name)
+        #    inputs = self.tokenizer(table=data, queries=[question], padding="max_length", return_tensors="pt")
+        #    with torch.no_grad():
+        #        outputs = self.model(**inputs)
+#
+        #    # Convert output logits to predicted answers
+        #    predicted_answers = self.tokenizer.convert_logits_to_answers(inputs, outputs.logits.detach())
+        #    return predicted_answers
         return output_parser.invoke(response)
+    
+class Get_explanation():
+    def __init__(self, dataset_name):
+        self.data=dataset_name
+        self.agent=create_csv_agent(ChatGroq(model="gemma2-9b-it", api_key=self.groq_key), self.dataset_name , verbose=True, allow_dangerous_code=True)
+    def explain_presentation(self, viz_dict, xaxis, yaxis):
+        
+        pass
+    def explain_layman(self, viz_dict, xaxis, yaxis):
+        pass
