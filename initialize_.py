@@ -168,12 +168,15 @@ class Ask_questions:
         #    return predicted_answers
         return output_parser.invoke(response)
     
-class Get_explanation():
+class Makeppt():
     def __init__(self, dataset_name):
-        self.data=dataset_name
+        global output_parser
+        self.groq_key=os.getenv("GROQ_API_KEY")
+        self.dataset_name=dataset_name
         self.agent=create_csv_agent(ChatGroq(model="gemma2-9b-it", api_key=self.groq_key), self.dataset_name , verbose=True, allow_dangerous_code=True)
-    def explain_presentation(self, viz_dict, xaxis, yaxis):
         
-        pass
-    def explain_layman(self, viz_dict, xaxis, yaxis):
-        pass
+    def presentation(self, desc):
+        resp=self.agent.run(f"Explain this in detail in about 50 words{desc}")
+        return output_parser.invoke(resp)
+
+    
