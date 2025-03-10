@@ -1,5 +1,3 @@
-markdown
-Copy
 # DataQueryAI: Auto-Generated Insights with Natural Language Queries
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
@@ -80,10 +78,12 @@ Y. Kishore (UI/UX)
 
 D. Pramodh (AI Integration)
 
+📜 License
+This project is licensed under the MIT License. See LICENSE for details.
+
 🙏 Acknowledgements
+
 NASSCOM for the hackathon platform.
-
 Groq for providing AI model access.
-
 Streamlit for the intuitive UI framework.
 
