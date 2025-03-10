@@ -1,16 +1,3 @@
-import streamlit as st
-import pandas as pd
-import numpy
-from initialize_ import *
-import matplotlib.pyplot as plt
-import seaborn as sns
-import re
-import numpy as np
-import time
-import io
-from langchain_core.output_parsers import StrOutputParser
-
-
 st.title("Effective Data Visualization Tool")
 if os.path.exists("datasets")==False:
     os.mkdir("datasets")
@@ -24,6 +11,9 @@ else:
     questionare_lw_model = st.session_state.questionare_lw_model
 create_template=Create_prompt_template()
 csv_data=st.file_uploader(label="Enter the csv file which you want to create visualization on: ")
+prs = Presentation()
+save_ppt=st.radio("Create a presentation?: ", ["Yes", "No"], captions=["Dont worry we create effective Viz", "ok"])
+
 if csv_data:
     file_name=csv_data.name
     flag_ste=True
@@ -52,7 +42,7 @@ if csv_data:
             time.sleep(3)
             message.success("Done Processing")
         questioner=Ask_questions(file_path)
-
+        ppt=Makeppt(file_path)
         class Visualize_data():
             def run(self, data):
                 for key in data:
@@ -66,20 +56,18 @@ if csv_data:
                         if viz_type == "Scatter Plot":
                             data_df = pd.DataFrame({xaxis: xaxis_values, yaxis: yaxis_values})
                             aggregated_data = data_df.groupby(xaxis).sum().reset_index()
+                            aggregated_data = aggregated_data.sort_values(by=yaxis, ascending=False)
+                            aggregated_data = aggregated_data.head(50)
                             xaxis_values = aggregated_data[xaxis]
                             yaxis_values = aggregated_data[yaxis]
-                            if len(xaxis_values)<100:
-                                if re.search("(.*?)-(.*?)", str(xaxis_values)) or re.search("(.*?)/(.*?)", str(xaxis_values)):
-                                    xaxis_values = xaxis_values[:20]
-                                    yaxis_values = yaxis_values[:20]
-                                fig, ax = plt.subplots(figsize=(12, 6))
-                                sns.scatterplot(x=xaxis_values, y=yaxis_values, color='blue', alpha=0.6, edgecolor='black', ax=ax)
-                                ax.set_title("Scatter Plot")
-                                ax.set_xlabel(xaxis)
-                                ax.set_ylabel(yaxis)
-                                st.subheader(desc)
-                                plt.xticks(rotation=90)
-                                st.pyplot(fig)
+                            fig, ax = plt.subplots(figsize=(12, 6))
+                            sns.scatterplot(x=xaxis_values, y=yaxis_values, color='blue', alpha=0.6, edgecolor='black', ax=ax)
+                            ax.set_title("Scatter Plot")
+                            ax.set_xlabel(xaxis)
+                            ax.set_ylabel(yaxis)
+                            st.subheader(desc)
+                            plt.xticks(rotation=90)
+                            st.pyplot(fig)
                         elif viz_type == "Bar Chart":
                             data_df = pd.DataFrame({xaxis: xaxis_values, yaxis: yaxis_values})
         
@@ -94,6 +82,8 @@ if csv_data:
                                     aggregated_data = data_df.groupby(xaxis).sum().reset_index()
                             else:
                                 aggregated_data = data_df.groupby(xaxis).sum().reset_index()
+                            aggregated_data = aggregated_data.sort_values(by=yaxis, ascending=False)
+                            aggregated_data = aggregated_data.head(50)
                             xaxis_values = aggregated_data.iloc[:, 0]
                             yaxis_values = aggregated_data[yaxis]
                             fig, ax = plt.subplots(figsize=(12, 6))
@@ -103,43 +93,6 @@ if csv_data:
                             ax.set_title("Bar Chart Example")
                             st.subheader(desc)
                             plt.xticks(rotation=90)
-                            st.pyplot(fig)
-                        elif viz_type == "Bubble Chart":
-                            data_df = pd.DataFrame({xaxis: xaxis_values, yaxis: yaxis_values})
-                            aggregated_data = data_df.groupby(xaxis).sum().reset_index()
-                            xaxis_values = aggregated_data[xaxis]
-                            yaxis_values = aggregated_data[yaxis]
-                            sub_data = pd.DataFrame({
-                                xaxis: xaxis_values,
-                                yaxis: yaxis_values,
-                                'size': yaxis_values
-                            })
-                            fig, ax = plt.subplots(figsize=(12, 6))
-                            sns.scatterplot(
-                                data=sub_data, x=xaxis, y=yaxis, size='size', hue=xaxis, alpha=0.6,
-                                edgecolor='black', palette="viridis", ax=ax
-                            )
-                            ax.set_title("Bubble Chart")
-                            ax.set_xlabel(xaxis)
-                            ax.set_ylabel(yaxis)
-                            st.subheader(desc)
-                            st.pyplot(fig)
-                        elif viz_type == "Heatmap":
-                            fig, ax = plt.subplots()
-                            try:
-                                sns.heatmap(data, annot=True, fmt=".1f", cmap="YlGnBu", ax=ax)
-                            except Exception:
-                                sns.heatmap(data, annot=True, fmt=".1f", cmap="YlGnBu", ax=ax)
-                            ax.set_title(f"Heatmap: {xaxis} vs {yaxis}")
-                            st.pyplot(fig)
-                        elif viz_type == "Histogram":
-                            fig, ax = plt.subplots()
-                            sns.histplot(x=xaxis_values, y=yaxis_values, kde=False, color='blue', ax=ax)
-                            ax.set_title(f"Histogram of {xaxis}")
-                            ax.set_xlabel(xaxis)
-                            ax.set_ylabel(yaxis)
-                            plt.xticks(rotation=90)
-                            st.subheader(desc)
                             st.pyplot(fig)
                         elif viz_type == "Pie Chart":
                             data_df = pd.DataFrame({xaxis: xaxis_values, yaxis: yaxis_values})
@@ -179,6 +132,9 @@ if csv_data:
                                     aggregated_data = data_df.groupby(xaxis).sum().reset_index()
                             else:
                                 aggregated_data = data_df.groupby(xaxis).sum().reset_index()
+                            aggregated_data = data_df.groupby(xaxis).sum().reset_index()
+                            aggregated_data = aggregated_data.sort_values(by=yaxis, ascending=False)
+                            aggregated_data = aggregated_data.head(50)
                             xaxis_values = aggregated_data.iloc[:, 0]
                             yaxis_values = aggregated_data[yaxis]
                             fig, ax = plt.subplots(figsize=(15, 8))
@@ -201,11 +157,36 @@ if csv_data:
                             file_name=f"{viz_type.replace(' ', '_')}_{xaxis}_vs_{yaxis}.png",
                             mime="image/png"
                         )
+                        if save_ppt=="Yes":
+                            pptx_image = f"{viz_type.replace(' ', '_')}_{xaxis}_vs_{yaxis}.png"
+                            with open(pptx_image, "wb") as f:
+                                f.write(buffer.getvalue())
+                            slide_layout = prs.slide_layouts[5]  
+                            slide = prs.slides.add_slide(slide_layout)
+                            shapes = slide.shapes
 
-                        
+                            left = Inches(0.5)
+                            top = Inches(3)
+                            pic = slide.shapes.add_picture(pptx_image, left, top, width=Inches(4.5))
+
+                            text_box = shapes.add_textbox(Inches(5.5), Inches(1), Inches(7), Inches(3))
+                            text_frame = text_box.text_frame
+                            answer=ppt.presentation(desc)
+                            text_frame.text = f"{viz_type} of {xaxis} vs {yaxis}\n\n{answer}"
+                            os.remove(pptx_image)
 
                     except Exception as e:
                         print (e)
+                if save_ppt=="Yes":
+                    pptx_path = "data_visualization_presentation.pptx"
+                    prs.save(pptx_path)
+                    with open(pptx_path, "rb") as f:
+                        st.download_button(
+                            label="Download Presentation",
+                            data=f,
+                            file_name="Data_Visualization.pptx",
+                            mime="application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                        )
         visualizer=Visualize_data()
         if flag_ste or first_iteration:
             dict_=pandas.get_dictionary()
@@ -240,8 +221,3 @@ if csv_data:
             st.write(question)
 else:
     pass
-
-
-
-
-
