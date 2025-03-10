@@ -178,5 +178,3 @@ class Makeppt():
     def presentation(self, desc):
         resp=self.agent.run(f"Explain this in detail in about 50 words{desc}")
         return output_parser.invoke(resp)
-
-    
