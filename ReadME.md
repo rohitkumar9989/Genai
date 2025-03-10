@@ -70,9 +70,9 @@ Mobile Responsiveness	❌ In Progress
 
 👥 Team
 
-K. Hemanth Kumar (Team Lead)
-
 K. Rohit Kumar (Backend)
+
+K. Hemanth Kumar (Visualization)
 
 J. Jayanth (Testing)
 
