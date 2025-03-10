@@ -7,6 +7,7 @@ import seaborn as sns
 import re
 import numpy as np
 import time
+import io
 from langchain_core.output_parsers import StrOutputParser
 
 
@@ -24,6 +25,15 @@ else:
 create_template=Create_prompt_template()
 csv_data=st.file_uploader(label="Enter the csv file which you want to create visualization on: ")
 if csv_data:
+    file_name=csv_data.name
+    flag_ste=True
+    if "state" not in st.session_state:
+        st.session_state.state=file_name
+    else:
+        if st.session_state["state"]==file_name:
+            flag_ste=False
+        else:
+            flag_ste=True
     file_path=os.path.join("datasets", csv_data.name)
     if os.path.exists(file_path)==False:
         st.write("Please move the csv data into the `datasets` folder")
@@ -36,7 +46,7 @@ if csv_data:
             data=pandas.preprocess_data(null)
             time.sleep(3)
             message.success("Done Processing")
-        questioner=Ask_questions(data, questionare_lw_model, file_path)
+        questioner=Ask_questions(file_path)
 
         class Visualize_data():
             def run(self, data):
@@ -176,31 +186,55 @@ if csv_data:
                             st.pyplot(fig)
                         else:
                             continue
+                        buffer = io.BytesIO()
+                        plt.savefig(buffer, format="png")
+                        buffer.seek(0)
 
+                        st.download_button(
+                            label="Download Report",
+                            data=buffer,
+                            file_name=f"{viz_type.replace(' ', '_')}_{xaxis}_vs_{yaxis}.png",
+                            mime="image/png"
+                        )
+
+                        
 
                     except Exception as e:
                         print (e)
         visualizer=Visualize_data()
-        dict_=pandas.get_dictionary()
-        promt_template=create_template.call(dict_)
-        chain=promt_template|llm_model1
-        dictionary=", ".join(f"Column Name: {key} Its datatype: {value} \n" for key, value in dict_.items())
-        with st.spinner("Thinking..."):
-            output=chain.invoke({"context": dictionary, "values":data.iloc[:50]})
-            pars=StrOutputParser()
-            output=pars.invoke(output)
-            extractor=Extract_data(output)
-            viz_dict=extractor.extract_columns()
+        if flag_ste==True:
+            dict_=pandas.get_dictionary()
+            promt_template=create_template.call(dict_)
+            chain=promt_template|llm_model1
+            dictionary=", ".join(f"Column Name: {key} Its datatype: {value} \n" for key, value in dict_.items())
+            with st.spinner("Thinking..."):
+                output=chain.invoke({"context": dictionary, "values":data.iloc[:50]})
+                pars=StrOutputParser()
+                output=pars.invoke(output)
+                extractor=Extract_data(output)
+                st.session_state.viz_dict=extractor.extract_columns()
+                with st.spinner("Visualizing the data"):
+                    visualizer.run(st.session_state.viz_dict)
+        else:
+            with st.spinner("Visualizing the data"):
+                    visualizer.run(st.session_state.viz_dict)
 
-        with st.spinner("Visualizing the data"):  
-            visualizer.run(viz_dict)
-        text=st.text_input("Enter your Question")
-        if text:
-            question = questioner.answer_question(text)
+
+        
+        col1, col2 = st.columns([4, 1])  
+
+        with col1:
+            text = st.text_input("Enter your Question")
+
+        with col2:
+            model_choice = st.selectbox("Model", ["ChatGPT", "Gemma", "Google Tapas"])
+
+        if text and model_choice:
+            question = questioner.answer_question(text, model_choice)
+            st.write(f"Using {model_choice}:")
             st.write(question)
 else:
     pass
-
 
 
 
